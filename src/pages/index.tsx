@@ -1,83 +1,150 @@
 import type { NextPage } from "next";
+
+import { RefObject, useEffect, useRef, useState } from "react";
+
 import Head from "next/head";
 import Image from "next/image";
 
+const idxToTeam = ["ai", "algo", "design", "dev"];
+
 const Home: NextPage = () => {
+  const aiSquare = useRef<HTMLDivElement>(null);
+  const algoSquare = useRef<HTMLDivElement>(null);
+  const designSquare = useRef<HTMLDivElement>(null);
+  const devSquare = useRef<HTMLDivElement>(null);
+
+  const [gameLength, setGameLength] = useState(2);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [showingSequence, setShowingSequence] = useState(true);
+
+  const refs = [aiSquare, algoSquare, designSquare, devSquare];
+
+  const [sequence, setSequence] = useState<string[]>([]);
+  const [userSequence, setUserSequence] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (userSequence.length === gameLength) {
+      if (userSequence.join("") === sequence.join("")) {
+        setGameLength((prev) => prev + 1);
+      } else {
+        alert("You lost!");
+        setGameLength(2);
+        setShowingSequence(true);
+        setUserSequence([]);
+        setSequence([]);
+      }
+    }
+  }, [userSequence]);
+
+  // increase the size of the square, then after 750ms normalize it
+  const highlight = (ref: RefObject<HTMLDivElement>) => {
+    ref.current?.classList.add("scale-125");
+
+    // add the square to the sequence
+    setSequence((prev) => [...prev, idxToTeam[refs.indexOf(ref)]]);
+    setTimeout(() => {
+      ref.current?.classList.remove("scale-125");
+    }, 750);
+  };
+
+  // when we click start, we want to randomly highlight 2 squares
+  // to start the game
+  useEffect(() => {
+    const startGame = () => {
+      setGameStarted(true);
+      setShowingSequence(true);
+      setSequence([]);
+      setUserSequence([]);
+
+      // randomly highlight gameLength squares
+      for (let i = 0; i < gameLength; i++) {
+        const randomIndex = Math.floor(Math.random() * refs.length);
+        setTimeout(() => {
+          highlight(refs[randomIndex]);
+        }, i * 1000);
+      }
+
+      // after the sequence is done, we want to allow the user to click
+      // on the squares
+      setTimeout(() => {
+        setShowingSequence(false);
+      }, gameLength * 750);
+    };
+    startGame();
+  }, [gameLength]);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+    <div className="flex min-h-screen flex-col items-center justify-center space-y-40 py-2">
       <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>ACM Memory Game</title>
+        <link rel="icon" href="https://acmcsuf.com/assets/badges/general.svg" />
       </Head>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{" "}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
-        <p className="mt-3 text-2xl">
-          Get started by editing{" "}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
+      <h1 className="text-6xl font-bold">ACM Memory</h1>
 
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and its API.
-            </p>
-          </a>
+      <div className="grid rotate-45 grid-cols-2 gap-8">
+        <div
+          ref={aiSquare}
+          className={
+            "square bg-ai" + (showingSequence ? " hover:scale-100" : "")
+          }
+          onClick={() => {
+            if (!showingSequence) {
+              setUserSequence([...userSequence, "ai"]);
+            }
+          }}
+        ></div>
+        <div
+          ref={algoSquare}
+          className={
+            "square bg-algo" + (showingSequence ? " hover:scale-100" : "")
+          }
+          onClick={() => {
+            if (!showingSequence) {
+              setUserSequence([...userSequence, "algo"]);
+            }
+          }}
+        ></div>
+        <div
+          ref={designSquare}
+          className={
+            "square bg-design" + (showingSequence ? " hover:scale-100" : "")
+          }
+          onClick={() => {
+            if (!showingSequence) {
+              setUserSequence([...userSequence, "design"]);
+            }
+          }}
+        ></div>
+        <div
+          ref={devSquare}
+          className={
+            "square bg-dev" + (showingSequence ? " hover:scale-100" : "")
+          }
+          onClick={() => {
+            if (!showingSequence) {
+              setUserSequence([...userSequence, "dev"]);
+            }
+          }}
+        ></div>
+      </div>
 
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-        </a>
-      </footer>
+      <button
+        className={
+          "rounded bg-blue-500 py-4 px-24 font-bold text-white hover:bg-blue-700" +
+          (gameStarted
+            ? " disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+            : "")
+        }
+        disabled={gameStarted}
+        onClick={() => {
+          if (!gameStarted) {
+            setGameLength(2);
+          }
+        }}
+      >
+        Start
+      </button>
     </div>
   );
 };
